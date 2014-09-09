@@ -28,16 +28,16 @@ class UserModel(db.Model):
         return res
 
     def _get_groups(self):
-        return [x.groupid for x in self.groups]
+        return [x.groupid for x in self.groups_obj]
 
     def _set_groups(self, groups):
-        while(self.groups):
-            del self.groups[0]
+        while(self.groups_obj):
+            del self.groups_obj[0]
 
         for group in groups:
-            self.groups.append(self._get_or_create_group(group))
+            self.groups_obj.append(self._get_or_create_group(group))
 
-    str_groups = property(_get_groups, _set_groups)
+    groups = property(_get_groups, _set_groups)
 
     def __repr__(self):
         return '<User: %r>' % self.userid
@@ -46,8 +46,8 @@ class UserModel(db.Model):
 class GroupModel(db.Model):
     __tablename__ = 'groups'
     groupid = db.Column(db.String(50), primary_key=True)
-    users = db.relationship('UserModel', secondary=usergroup,
-                             backref=db.backref('groups'))
+    users_obj = db.relationship('UserModel', secondary=usergroup,
+                                backref=db.backref('groups_obj'))
 
     def __init__(self, groupid):
         self.groupid = groupid
@@ -59,16 +59,16 @@ class GroupModel(db.Model):
         return res
 
     def _get_users(self):
-        return [x.userid for x in self.users]
+        return [x.userid for x in self.users_obj]
 
     def _set_users(self, users):
-        while(self.users):
-            del self.users[0]
+        while(self.users_obj):
+            del self.users_obj[0]
 
         for user in users:
-            self.users.append(self._get_user(user))
+            self.users_obj.append(self._get_user(user))
 
-    str_users = property(_get_users, _set_users)
+    users = property(_get_users, _set_users)
 
     def __repr__(self):
         return '<Group: %r>' % self.groupid
