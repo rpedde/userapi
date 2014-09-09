@@ -2,6 +2,7 @@ import json
 import os
 import unittest
 import userapi
+import userapi.cli
 
 from userapi.database import db
 

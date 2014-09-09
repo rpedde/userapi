@@ -1,8 +1,6 @@
 # Provide the cli entrypoints
 
-import getopt
 import os
-import sys
 
 from flask import Flask
 

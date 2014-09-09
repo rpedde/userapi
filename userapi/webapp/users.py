@@ -52,7 +52,7 @@ class Users(restful.Resource):
 
         try:
             db.session.delete(user)
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             db.session.rollback()
             return self._plain('Error deleting user', 500)
 
@@ -78,14 +78,14 @@ class Users(restful.Resource):
         except ValueError:
             return self._plain("Invalid json", 400)
 
-        first_name = '' if not 'first_name' in data else data['first_name']
-        last_name = '' if not 'last_name' in data else data['last_name']
+        first = '' if 'first_name' not in data else data['first_name']
+        last = '' if 'last_name' not in data else data['last_name']
 
-        new_user = UserModel(userid, first_name=first_name, last_name=last_name)
+        new_user = UserModel(userid, first_name=first, last_name=last)
 
         try:
             db.session.add(new_user)
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             db.session.rollback()
             return self._plain('Error creating user', 500)
 
@@ -120,7 +120,7 @@ class Users(restful.Resource):
             for field in ['first_name', 'last_name', 'groups']:
                 if field in data:
                     setattr(update_user, field, data[field])
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             db.session.rollback()
             return self._plain('Error updating user', 500)
 
@@ -131,11 +131,7 @@ class Users(restful.Resource):
 class UsersList(restful.Resource):
     """ see the whole user list """
     def get(self):
-        return [{userid: x.userid,
-                 last_name: x.last_name,
-                 first_name: x.first_name}
-                for x in UserModel.query.all()]
-
+        return [x.userid for x in UserModel.query.all()]
 
 
 users_api.add_resource(Users, '/<string:userid>')
