@@ -27,7 +27,7 @@ class Groups(restful.Resource):
           200 - if group exists, plus json list of users
           404 - if group does not exist
         """
-        group = GroupModel.query.get(groupid)
+        group = GroupModel.query.filter_by(groupid=groupid).first()
         if not group:
             return self._plain('Group not found', 404)
 
@@ -43,7 +43,7 @@ class Groups(restful.Resource):
           200 - deleted
           404 - group not found
         """
-        group = GroupModel.query.get(groupid)
+        group = GroupModel.query.filter_by(groupid=groupid).first()
         if not group:
             return self._plain('Group not found', 404)
 
@@ -60,7 +60,7 @@ class Groups(restful.Resource):
           201 - group created
           409 - group exists
         """
-        if GroupModel.query.get(groupid):
+        if GroupModel.query.filter_by(groupid=groupid).first():
             return self._plain('Group exists', 409)
 
         new_group = GroupModel(groupid)
@@ -78,7 +78,7 @@ class Groups(restful.Resource):
           404 - group not found
           400 - invalid JSON or bad user specified
         """
-        group = GroupModel.query.get(groupid)
+        group = GroupModel.query.filter_by(groupid=groupid).first()
         if not group:
             return self._plain('Group not found', 404)
 

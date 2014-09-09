@@ -2,17 +2,18 @@ from userapi.database import db
 
 
 usergroup = db.Table('usergroup',
-                     db.Column('userid',
-                               db.String(50),
-                               db.ForeignKey('users.userid')),
-                     db.Column('groupid',
-                               db.String(50),
-                               db.ForeignKey('groups.groupid')))
+                     db.Column('user_id',
+                               db.Integer,
+                               db.ForeignKey('users.id')),
+                     db.Column('group_id',
+                               db.Integer,
+                               db.ForeignKey('groups.id')))
 
 
 class UserModel(db.Model):
     __tablename__ = 'users'
-    userid = db.Column(db.String(50), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.String(50), unique=True, nullable=False)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
 
@@ -22,7 +23,7 @@ class UserModel(db.Model):
         self.last_name = last_name
 
     def _get_or_create_group(self, group):
-        res = GroupModel.query.get(group)
+        res = GroupModel.query.filter_by(groupid=group).first()
         if not res:
             res = GroupModel(group)
         return res
@@ -45,7 +46,8 @@ class UserModel(db.Model):
 
 class GroupModel(db.Model):
     __tablename__ = 'groups'
-    groupid = db.Column(db.String(50), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    groupid = db.Column(db.String(50), unique=True, nullable=False)
     users_obj = db.relationship('UserModel', secondary=usergroup,
                                 backref=db.backref('groups_obj'))
 
@@ -53,7 +55,7 @@ class GroupModel(db.Model):
         self.groupid = groupid
 
     def _get_user(self, user):
-        res = UserModel.query.get(user)
+        res = UserModel.query.filter_by(userid=user).first()
         if not res:
             raise ValueError('Unknown user %s' % user)
         return res

@@ -31,7 +31,7 @@ class Users(restful.Resource):
 
         keys = ['userid', 'first_name', 'last_name', 'groups']
 
-        user = UserModel.query.get(userid)
+        user = UserModel.query.filter_by(userid=userid).first()
         if not user:
             return self._plain('User not found', 404)
 
@@ -46,7 +46,7 @@ class Users(restful.Resource):
           404 - user does not exist
           200 - success
         """
-        user = UserModel.query.get(userid)
+        user = UserModel.query.filter_by(userid=userid).first()
         if not user:
             return self._plain('User not found', 404)
 
@@ -68,10 +68,8 @@ class Users(restful.Resource):
           409 - object exists
           201 - created object
         """
-        if UserModel.query.get(userid):
+        if UserModel.query.filter_by(userid=userid).first():
             return self._plain("User Exists", 409)
-
-        request.get_data()
 
         try:
             data = json.loads(request.data)
@@ -106,7 +104,7 @@ class Users(restful.Resource):
           400 - bad json
           404 - user not found
         """
-        update_user = UserModel.query.get(userid)
+        update_user = UserModel.query.filter_by(userid=userid).first()
         if not update_user:
             return self._plain('User not found', 404)
 
