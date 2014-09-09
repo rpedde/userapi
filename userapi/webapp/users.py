@@ -1,6 +1,6 @@
 import json
 
-from flask import Blueprint, request
+from flask import Blueprint, request, make_response
 from flask.ext import restful
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -12,7 +12,15 @@ users_api = restful.Api(users_bp)
 
 
 class Users(restful.Resource):
-    """ Manage a single user -- get, put, delete """
+    """ User management class """
+
+    @users_api.representation('text/plain')
+    def _plain(self, data, code, headers=None):
+        """ Text/plain output function """
+        resp = make_response(data, code)
+        resp.headers.extend(headers or {})
+        return resp
+
     def get(self, userid):
         """ return the user object
 
@@ -25,7 +33,7 @@ class Users(restful.Resource):
 
         user = UserModel.query.get(userid)
         if not user:
-            return 'User not found', 404
+            return self._plain('User not found', 404)
 
         # return only a subset of the user object keys
         return dict((key, getattr(user, key)) for key in keys)
@@ -40,17 +48,17 @@ class Users(restful.Resource):
         """
         user = UserModel.query.get(userid)
         if not user:
-            return 'User not found', 404
+            return self._plain('User not found', 404)
 
         try:
             db.session.delete(user)
         except SQLAlchemyError as e:
             db.session.rollback()
-            return 'Error deleting user', 500
+            return self._plain('Error deleting user', 500)
 
         db.session.commit()
 
-        return 'Deleted successfully', 200
+        return self._plain('Deleted successfully', 200)
 
     def post(self, userid):
         """ create user object
@@ -61,14 +69,14 @@ class Users(restful.Resource):
           201 - created object
         """
         if UserModel.query.get(userid):
-            return "User Exists", 409
+            return self._plain("User Exists", 409)
 
         request.get_data()
 
         try:
             data = json.loads(request.data)
         except ValueError:
-            return "Invalid json", 400
+            return self._plain("Invalid json", 400)
 
         first_name = '' if not 'first_name' in data else data['first_name']
         last_name = '' if not 'last_name' in data else data['last_name']
@@ -79,7 +87,7 @@ class Users(restful.Resource):
             db.session.add(new_user)
         except SQLAlchemyError as e:
             db.session.rollback()
-            return 'Error creating user', 500
+            return self._plain('Error creating user', 500)
 
         db.session.commit()
 
@@ -88,7 +96,7 @@ class Users(restful.Resource):
             new_user.groups = data['groups']
             db.session.commit()
 
-        return 'Added Successfully', 201
+        return self._plain('Added Successfully', 201)
 
     def put(self, userid):
         """ update a user object
@@ -100,12 +108,12 @@ class Users(restful.Resource):
         """
         update_user = UserModel.query.get(userid)
         if not update_user:
-            return 'User not found', 404
+            return self._plain('User not found', 404)
 
         try:
             data = json.loads(request.data)
         except ValueError:
-            return 'Invalid JSON', 400
+            return self._plain('Invalid JSON', 400)
 
         db.session.add(update_user)
         try:
@@ -114,10 +122,10 @@ class Users(restful.Resource):
                     setattr(update_user, field, data[field])
         except SQLAlchemyError as e:
             db.session.rollback()
-            return 'Error updating user', 500
+            return self._plain('Error updating user', 500)
 
         db.session.commit()
-        return 'User updates', 200
+        return self._plain('User updated', 200)
 
 
 class UsersList(restful.Resource):
