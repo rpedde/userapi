@@ -2,6 +2,27 @@
 
 A simple user api service.
 
+## Docker setup ##
+
+build a docker container:
+
+~~~~
+$ sudo docker build .
+
+.. lots of stuff, lots of time ..
+
+Successfully built <some image number>
+~~~~
+
+then run it, redirecting port 5000
+
+~~~~
+$ sudo docker run -p 5000:5000 <the image created>
+~~~~
+
+Endpoint will sit at port 5000.
+
+
 ## Manual Setup ##
 
 Simplest manual run of the code would use pip and virtualenv, along
