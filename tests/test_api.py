@@ -51,13 +51,6 @@ class UserApiTestCase(unittest.TestCase):
                             data=json.dumps(current_members))
         self.assertEqual(resp.status_code, 200)
 
-    def scaffold(self):
-        """ set up some user scaffolding """
-        for user in ['user1', 'user2', 'user3']:
-            resp = self.app.post('/users/%s' % user,
-                                 content_type='application/json',
-                                 data="{}")
-
     def test_010_empty_db(self):
         """ Make sure we have an empty user list """
         resp = self.app.get('/users/')
@@ -106,7 +99,7 @@ class UserApiTestCase(unittest.TestCase):
 
     def test_040_delete_user(self):
         """ Make sure we can delete users """
-        self.scaffold()
+        self._create_user("user1")
         resp = self.app.delete('/users/user1')
         self.assertEqual(resp.status_code, 200)
         resp = self.app.get('/users/user1')
@@ -115,6 +108,26 @@ class UserApiTestCase(unittest.TestCase):
     def test_050_delete_invalid_user(self):
         """ Make sure delete on invalid user 404s """
         resp = self.app.delete('/users/notauser')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_060_update_group(self):
+        """ Make sure can update groups """
+        self._create_user("user1")
+        resp = self.app.put('/users/user1', content_type='application/json',
+                            data=json.dumps(dict(first_name='first',
+                                                 last_name='last')))
+        self.assertEqual(resp.status_code, 200)
+        resp = self.app.get('/users/user1')
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data['first_name'], 'first')
+        self.assertEqual(data['last_name'], 'last')
+
+    def test_070_updates_404(self):
+        """ Make sure updates to bad users 404 """
+        resp = self.app.put('/users/baduser', content_type='application/json',
+                            data=json.dumps(dict(first_name='first',
+                                                 last_name='last')))
         self.assertEqual(resp.status_code, 404)
 
     def test_100_add_group(self):
@@ -179,7 +192,7 @@ class UserApiTestCase(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertItemsEqual(data, ['testuser'])
 
-    def test_210_cascase_user_del(self):
+    def test_210_cascade_user_del(self):
         """ Make sure deleted users disappear from group membership """
         self._create_user('user1')
         self._add_user_to_group('user1', 'admin')
@@ -200,3 +213,26 @@ class UserApiTestCase(unittest.TestCase):
         resp = self.app.get('/groups/users')
         print resp.data
         self.assertEqual(resp.status_code, 404)
+
+    def test_220_cascade_group_del(self):
+        """ Make sure deleted groups disappear from users """
+        self._create_user('user1')
+        self._add_user_to_group('user1', 'admin')
+        self._add_user_to_group('user1', 'users')
+        self._create_user('user2')
+        self._add_user_to_group('user2', 'admin')
+
+        resp = self.app.delete('/groups/admin')
+        self.assertEqual(resp.status_code, 200)
+
+        # user1 should just be a member of users
+        resp = self.app.get('/users/user1')
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertItemsEqual(data['groups'], ['users'])
+
+        # user2 shold be a member of no groups
+        resp = self.app.get('/users/user2')
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertItemsEqual(data['groups'], [])
