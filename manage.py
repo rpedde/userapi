@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import userapi
+import userapi.cli
 
 from flask.ext.script import Manager
 

@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 Next, create the empty database:
 
-./manage.py -c ./userapi.conf.sample db_create
+./manage.py -c ./userapi.conf.sample create_db
 
 This will make a sqlite database in /tmp
 
