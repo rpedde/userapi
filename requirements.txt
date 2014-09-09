@@ -3,4 +3,5 @@ flask-sqlalchemy
 flask-script
 flask-restful
 pep8
+pyflakes
 nose

@@ -21,3 +21,9 @@ This will make a sqlite database in /tmp
 Then run the app:
 
 ./manage.py -c ./userapi.conf.sample runserver
+
+## Tests ##
+
+tests can be run with `./run_tests.sh`
+
+pep8/pyflakes can be checked with `./run_tests.sh pep8`
