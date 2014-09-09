@@ -1,6 +1,7 @@
 from userapi.database import db
 
 
+# set up a many-to-many intermediate table
 usergroup = db.Table('usergroup',
                      db.Column('user_id',
                                db.Integer,
@@ -11,6 +12,7 @@ usergroup = db.Table('usergroup',
 
 
 class UserModel(db.Model):
+    """ SQLAlchemy user model """
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.String(50), unique=True, nullable=False)
@@ -22,6 +24,9 @@ class UserModel(db.Model):
         self.first_name = first_name
         self.last_name = last_name
 
+    # If a user is created with group membership, find the group
+    # or create it automatically.  This could as easily fail if
+    # the group doesn't exist.
     def _get_or_create_group(self, group):
         res = GroupModel.query.filter_by(groupid=group).first()
         if not res:
@@ -38,6 +43,8 @@ class UserModel(db.Model):
         for group in groups:
             self.groups_obj.append(self._get_or_create_group(group))
 
+    # make a synthetic property that looks and sets like a
+    # list of group names
     groups = property(_get_groups, _set_groups)
 
     def __repr__(self):
@@ -45,15 +52,20 @@ class UserModel(db.Model):
 
 
 class GroupModel(db.Model):
+    """ SQLAlchemy group model """
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
     groupid = db.Column(db.String(50), unique=True, nullable=False)
+
+    # set up the m-t-m relationship
     users_obj = db.relationship('UserModel', secondary=usergroup,
                                 backref=db.backref('groups_obj'))
 
     def __init__(self, groupid):
         self.groupid = groupid
 
+    # unlike the user synthetic property, we'll raise if we try
+    # and add a non-existent user to the group membership list
     def _get_user(self, user):
         res = UserModel.query.filter_by(userid=user).first()
         if not res:
@@ -70,6 +82,8 @@ class GroupModel(db.Model):
         for user in users:
             self.users_obj.append(self._get_user(user))
 
+    # synthetic property that looks like a list of users in
+    # the group.
     users = property(_get_users, _set_users)
 
     def __repr__(self):
