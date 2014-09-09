@@ -112,11 +112,16 @@ class UserApiTestCase(unittest.TestCase):
 
     def test_060_update_group(self):
         """ Make sure can update groups """
+        # create a user
         self._create_user("user1")
+
+        # update first name and last name
         resp = self.app.put('/users/user1', content_type='application/json',
                             data=json.dumps(dict(first_name='first',
                                                  last_name='last')))
         self.assertEqual(resp.status_code, 200)
+
+        # verify user get changes
         resp = self.app.get('/users/user1')
         self.assertEqual(resp.status_code, 200)
         data = json.loads(resp.data)
@@ -132,13 +137,15 @@ class UserApiTestCase(unittest.TestCase):
 
     def test_100_add_group(self):
         """ Make sure we can add a group """
+        # add a group
         resp = self.app.post('/groups/group1')
         self.assertEqual(resp.status_code, 201)
+
+        # make sure it shows up in group list
         resp = self.app.get('/groups/')
         self.assertEqual(resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertTrue(len(data) == 1)
-        self.assertTrue('group1' in data)
+        self.assertItemsEqual(data, ['group1'])
 
     def test_110_add_dup_group(self):
         """ Make sure adding a duplicate group 409s """
@@ -149,8 +156,11 @@ class UserApiTestCase(unittest.TestCase):
 
     def test_120_del_group(self):
         """ Make sure we can delete a group """
+        # Create a group
         resp = self.app.post('/groups/group1')
         self.assertEqual(resp.status_code, 201)
+
+        # delete the group
         resp = self.app.delete('/groups/group1')
         self.assertEqual(resp.status_code, 200)
 
@@ -164,6 +174,28 @@ class UserApiTestCase(unittest.TestCase):
         """ Make sure deleting an invalid group 404s """
         resp = self.app.delete('/groups/invalid')
         self.assertEqual(resp.status_code, 404)
+
+    def test_140_update_group(self):
+        """ Make sure we can update group membership """
+        # Make a user
+        resp = self.app.post('/users/user1', content_type='application/json',
+                             data='{}')
+        self.assertEqual(resp.status_code, 201)
+
+        # add a group
+        resp = self.app.post('/groups/group1')
+        self.assertEqual(resp.status_code, 201)
+
+        # add the user to the group
+        resp = self.app.put('/groups/group1', content_type='application/json',
+                            data='["user1"]')
+        self.assertEqual(resp.status_code, 200)
+
+        # ensure the user is in the group
+        resp = self.app.get('/users/user1')
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertItemsEqual(data['groups'], ['group1'])
 
     def test_200_user_group_adds(self):
         """ Make sure groups are created on user adds """
@@ -236,3 +268,14 @@ class UserApiTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertItemsEqual(data['groups'], [])
+
+    def test_230_invalid_group_membership(self):
+        """ Make sure invalid user adds to a group fail """
+        # make a group
+        resp = self.app.post('/groups/admin')
+        self.assertEqual(resp.status_code, 201)
+
+        # set an invalid member
+        resp = self.app.put('/groups/admin', content_type='application/json',
+                            data='["user2"]')
+        self.assertEqual(resp.status_code, 400)
