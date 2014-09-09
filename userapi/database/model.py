@@ -55,7 +55,7 @@ class GroupModel(db.Model):
     def _get_user(self, user):
         res = UserModel.query.get(user)
         if not res:
-            RaiseValueError('Unknown user %s' % user)
+            raise ValueError('Unknown user %s' % user)
         return res
 
     def _get_users(self):
