@@ -18,10 +18,10 @@ class Groups(restful.Resource):
         if not group:
             return 'Group not found', 404
 
-        if len(group.str_users) == 0:
+        if len(group.users) == 0:
             return 'Group empty', 404
 
-        return group.str_users
+        return group.users
 
     def delete(self, groupid):
         """ delete the specified group object, or 404 if not exist """
@@ -62,7 +62,7 @@ class Groups(restful.Resource):
         db.session.add(group)
 
         try:
-            group.str_users = data
+            group.users = data
         except ValueError as e:
             db.session.rollback()
             return 'Error updating group membership: %s' % str(e), 400
